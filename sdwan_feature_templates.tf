@@ -160,14 +160,10 @@ resource "sdwan_vpn_interface_svi_feature_template" "vpn_interface_svi_feature_t
     group_id_variable = try(v.id_variable, null)
     ipv4_address = try(v.address, null)
     ipv4_address_variable = try(v.address_variable, null)
-    ipv4_secondary_addresses = concat(
-      [for a in try(v.secondary_addresses, []) : {
-      ipv4_address = a
-      }],
-      [for b in try(v.secondary_address_variables, []) : {
-      ipv4_address_variable = b
+    ipv4_secondary_addresses = [ for sa in try(v.secondary_addresses, []) : {
+      ipv4_address = try(sa.address, null)
+      ipv4_address_variable = try(sa.address_variable, null)
       }]
-    )
     optional = try(v.optional, null)
     priority = try(v.priority, null)
     priority_variable = try(v.priority_variable, null)
@@ -188,5 +184,135 @@ resource "sdwan_vpn_interface_svi_feature_template" "vpn_interface_svi_feature_t
       track_action = try(t.action, null)
       track_action_variable = try(t.action_variable, null)
     }]
+  }]
+ipv6_vrrps = [for v in try(each.value.ipv6_vrrp_groups, []) : {
+    group_id = try(v.id, null)
+    group_id_variable = try(v.id_variable, null)
+    ipv6_addresses = flatten([
+      try(v.global_prefix, null) == null ? [] : [{
+        prefix = v.global_prefix
+      }],
+      try(v.global_prefix_variable, null) == null ? [] : [{
+        prefix_variable = v.global_prefix_variable
+      }],
+      try(v.link_local_address, null) == null ? [] : [{
+        link_local_address = v.link_local_address
+      }],
+      try(v.link_local_address_variable, null) == null ? [] : [{
+        link_local_address_variable = v.link_local_address_variable
+      }]
+    ])
+    ipv6_secondary_addresses = [ for sa in try(v.secondary_addresses, []) : {
+      prefix = try(sa.address, null)
+      prefix_variable = try(sa.address_variable, null)
+      }]
+    optional = try(v.optional, null)
+    priority = try(v.priority, null)
+    priority_variable = try(v.priority_variable, null)
+    timer = try(v.timer, null)
+    timer_variable = try(v.timer_variable, null)
+    track_omp = try(v.track_omp, null)
+    track_omp_variable = try(v.track_omp_variable, null)
+    track_prefix_list = try(v.track_prefix_list, null)
+    track_prefix_list_variable = try(v.track_prefix_list_variable, null)
+  }]
+}
+
+resource "sdwan_cisco_secure_internet_gateway_feature_template" "cisco_secure_internet_gateway_feature_template" {
+  for_each       = { for t in try(local.edge_feature_templates.secure_internet_gateway_templates, {}) : t.name => t }
+  name           = each.value.name
+  description    = each.value.description
+  device_types    = [for d in try(each.value.device_types, local.defaults.sdwan.edge_feature_templates.secure_internet_gateway_templates.device_types) : try(local.device_type_map[d], "vedge-${d}")]
+  tracker_source_ip  = try(each.value.tracker_source_ip, null)
+  tracker_source_ip_variable = try(each.value.tracker_source_ip_variable, null)
+  trackers = [ for tracker in try(each.value.trackers, []) : {
+    tracker_type = "SIG"
+    endpoint_api_url = try(tracker.endpoint_api_url, null)
+    endpoint_api_url_variable = try(tracker.endpoint_api_url_variable, null)
+    multiplier = try(tracker.multiplier, null)
+    multiplier_variable = try(tracker.multiplier_variable, null)
+    interval = try(tracker.interval, null)
+    interval_variable = try(tracker.interval_variable, null)
+    name = try(tracker.name, null)
+    name_variable = try(tracker.name_variable, null)
+    threshold = try(tracker.threshold, null)
+    threshold_variable = try(tracker.threshold_variable, null)
+  }]
+  interfaces = [for interface in try(each.value.interfaces, []) : {
+    application = "sig"
+    description = try(interface.description, null)
+    description_variable = try(interface.description_variable, null)
+    dead_peer_detection_interval = try(interface.dpd_interval, null)
+    dead_peer_detection_interval_variable = try(interface.dpd_interval_variable, null)
+    dead_peer_detection_retries = try(interface.dpd_retries, null)
+    dead_peer_detection_retries_variable = try(interface.dpd_retries_variable, null)
+    ike_ciphersuite = try(interface.ike_ciphersuite, null)
+    ike_ciphersuite_variable = try(interface.ike_ciphersuite_variable, null)
+    ike_group = try(interface.ike_group, null)
+    ike_group_variable = try(interface.ike_group_variable, null)
+    ike_pre_shared_key = try(interface.ike_pre_shared_key, null)
+    ike_pre_shared_key_variable = try(interface.ike_pre_shared_key_variable, null)
+    ike_pre_shared_key_local_id = try(interface.ike_pre_shared_key_local_id, null)
+    ike_pre_shared_key_local_id_variable = try(interface.ike_pre_shared_key_local_id_variable, null)
+    ike_pre_shared_key_remote_id = try(interface.ike_pre_shared_key_remote_id, null)
+    ike_pre_shared_key_remote_id_variable = try(interface.ike_pre_shared_key_remote_id_variable, null)
+    ike_rekey_interval = try(interface.ike_rekey_interval, null)
+    ike_rekey_interval_variable = try(interface.ike_rekey_interval_variable, null)
+    ipsec_ciphersuite = try(interface.ipsec_ciphersuite, null)
+    ipsec_ciphersuite_variable = try(interface.ipsec_ciphersuite_variable, null)
+    ipsec_perfect_forward_secrecy = try(interface.ipsec_perfect_forward_secrecy, null)
+    ipsec_perfect_forward_secrecy_variable = try(interface.ipsec_perfect_forward_secrecy_variable, null)
+    ipsec_rekey_interval = try(interface.ipsec_rekey_interval, null)
+    ipsec_rekey_interval_variable = try(interface.ipsec_rekey_interval_variable, null)
+    ipsec_replay_window = try(interface.ipsec_replay_window, null)
+    ipsec_replay_window_variable = try(interface.ipsec_replay_window_variable, null)
+    mtu = try(interface.mtu, null)
+    mtu_variable = try(interface.mtu_variable, null)
+    name = try(interface.name, null)
+    name_variable = try(interface.name_variable, null)
+    shutdown = try(interface.shutdown, null)
+    sig_provider = try(interface.sig_provider, null)
+    tcp_mss = try(interface.tcp_mss, null)
+    tcp_mss_variable = try(interface.tcp_mss_variable, null)
+    track_enable = try(interface.track, null)
+    tunnel_dc_preference = try(interface.tunnel_dc_preference, null)
+    tunnel_destination = try(interface.tunnel_destination, null)
+    tunnel_destination_variable = try(interface.tunnel_destination_variable, null)
+    tunnel_source_interface = try(interface.tunnel_source_interface, null)
+    tunnel_source_interface_variable = try(interface.tunnel_source_interface_variable, null)
+  }]
+  services = [{
+    service_type = (
+      try(each.value.umbrella_primary_data_center, each.value.umbrella_primary_data_center_variable, each.value.umbrella_secondary_data_center, each.value.umbrella_secondary_data_center_variable, each.value.zscaler_primary_data_center, each.value.zscaler_primary_data_center_variable, each.value.zscaler_secondary_data_center, each.value.zscaler_secondary_data_center_variable, each.value.zscaler_aup_block_internet_until_accepted, each.value.zscaler_aup_enabled, each.value.zscaler_aup_force_ssl_inspection, each.value.zscaler_aup_timeout, each.value.zscaler_authentication_required, each.value.zscaler_caution_enabled, each.value.zscaler_ips_control_enabled, each.value.zscaler_firewall_enabled, each.value.zscaler_location_name_variable, each.value.zscaler_surrogate_display_time_unit, each.value.zscaler_surrogate_idle_time, each.value.zscaler_surrogate_ip, each.value.zscaler_surrogate_ip_enforce_for_known_browsers, each.value.zscaler_surrogate_refresh_time, each.value.zscaler_surrogate_refresh_time_unit, each.value.zscaler_xff_forward) == null ? null : "sig")
+    umbrella_primary_data_center = try(each.value.umbrella_primary_data_center, null)
+    umbrella_primary_data_center_variable = try(each.value.umbrella_primary_data_center_variable, null)
+    umbrella_secondary_data_center = try(each.value.umbrella_secondary_data_center, null)
+    umbrella_secondary_data_center_variable = try(each.value.umbrella_secondary_data_center_variable, null)
+    zscaler_aup_block_internet_until_accepted  = try(each.value.zscaler_aup_block_internet_until_accepted, null)
+    zscaler_aup_enabled  = try(each.value.zscaler_aup_enabled, null)
+    zscaler_aup_force_ssl_inspection  = try(each.value.zscaler_aup_force_ssl_inspection, null)
+    zscaler_aup_timeout  = try(each.value.zscaler_aup_timeout, null)
+    zscaler_authentication_required  = try(each.value.zscaler_authentication_required, null)
+    zscaler_caution_enabled  = try(each.value.zscaler_caution_enabled, null)
+    zscaler_ips_control_enabled  = try(each.value.zscaler_ips_control_enabled, null)
+    zscaler_firewall_enabled  = try(each.value.zscaler_firewall_enabled, null)
+    zscaler_location_name_variable  = try(each.value.zscaler_location_name_variable, null)
+    zscaler_primary_data_center  = try(each.value.zscaler_primary_data_center, null)
+    zscaler_primary_data_center_variable  = try(each.value.zscaler_primary_data_center_variable, null)
+    zscaler_secondary_data_center  = try(each.value.zscaler_secondary_data_center, null)
+    zscaler_secondary_data_center_variable  = try(each.value.zscaler_secondary_data_center_variable, null)
+    zscaler_surrogate_display_time_unit  = try(each.value.zscaler_surrogate_display_time_unit, null)
+    zscaler_surrogate_idle_time  = try(each.value.zscaler_surrogate_idle_time, null)
+    zscaler_surrogate_ip  = try(each.value.zscaler_surrogate_ip, null)
+    zscaler_surrogate_ip_enforce_for_known_browsers  = try(each.value.zscaler_surrogate_ip_enforce_for_known_browsers, null)
+    zscaler_surrogate_refresh_time  = try(each.value.zscaler_surrogate_refresh_time, null)
+    zscaler_surrogate_refresh_time_unit  = try(each.value.zscaler_surrogate_refresh_time_unit, null)
+    zscaler_xff_forward  = try(each.value.zscaler_xff_forward, null)
+    interface_pairs = [for pair in try(each.value.high_availability_interface_pairs, []) : {
+      active_interface = try(pair.active_interface, null)
+      active_interface_weight = try(pair.active_interface_weight, null)
+      backup_interface = try(pair.backup_interface, null)
+      backup_interface_weight = try(pair.backup_interface_weight, null)
+      }]
   }]
 }
