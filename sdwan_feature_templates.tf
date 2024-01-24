@@ -353,3 +353,34 @@ resource "sdwan_cisco_sig_credentials_feature_template" "sig_credentials_feature
   zscaler_username                  = try(each.value.zscaler_username, null)
   zscaler_username_variable         = try(each.value.zscaler_username_variable, null)
 }
+
+resource "sdwan_cisco_thousandeyes_feature_template" "thousandeyes_feature_template" {
+  for_each     = { for t in try(local.edge_feature_templates.thousandeyes_templates, {}) : t.name => t }
+  name         = each.value.name
+  description  = each.value.description
+  device_types = [for d in try(each.value.device_types, local.defaults.sdwan.edge_feature_templates.thousandeyes_templates.device_types) : try(local.device_type_map[d], "vedge-${d}")]
+  virtual_applications = [for virtual_applications in try(each.value.virtual_applications, []) : {
+    application_type                = try(virtual_applications.application_type, local.defaults.sdwan.edge_feature_templates.thousandeyes_templates.virtual_applications.application_type, null)
+    instance_id                     = try(virtual_applications.instance_id, local.defaults.sdwan.edge_feature_templates.thousandeyes_templates.virtual_applications.instance_id, null)
+    optional                        = try(virtual_applications.optional, null)
+    te_account_group_token          = try(virtual_applications.te_account_group_token, null)
+    te_account_group_token_variable = try(virtual_applications.te_account_group_token_variable, null)
+    te_agent_ip                     = try(virtual_applications.te_agent_ip, null)
+    te_agent_ip_variable            = try(virtual_applications.te_agent_ip_variable, null)
+    te_default_gateway              = try(virtual_applications.te_default_gateway, null)
+    te_default_gateway_variable     = try(virtual_applications.te_default_gateway_variable, null)
+    te_hostname                     = try(virtual_applications.te_hostname, null)
+    te_hostname_variable            = try(virtual_applications.te_hostname_variable, null)
+    te_name_server                  = try(virtual_applications.te_name_server, null)
+    te_name_server_variable         = try(virtual_applications.te_name_server_variable, null)
+    te_pac_url                      = try(virtual_applications.te_pac_url, null)
+    te_pac_url_variable             = try(virtual_applications.te_pac_url_variable, null)
+    te_proxy_host                   = try(virtual_applications.te_proxy_host, null)
+    te_proxy_host_variable          = try(virtual_applications.te_proxy_host_variable, null)
+    te_proxy_port                   = try(virtual_applications.te_proxy_port, local.defaults.sdwan.edge_feature_templates.thousandeyes_templates.virtual_applications.te_proxy_port, null)
+    te_proxy_port_variable          = try(virtual_applications.te_proxy_port_variable, null)
+    te_vpn                          = try(virtual_applications.te_vpn, local.defaults.sdwan.edge_feature_templates.thousandeyes_templates.virtual_applications.te_vpn, null)
+    te_vpn_variable                 = try(virtual_applications.te_vpn_variable, null)
+    te_web_proxy_type               = try(virtual_applications.te_web_proxy_type, local.defaults.sdwan.edge_feature_templates.thousandeyes_templates.virtual_applications.te_web_proxy_type, null)
+  }]
+}
