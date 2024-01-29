@@ -80,8 +80,8 @@ resource "sdwan_vpn_interface_svi_feature_template" "vpn_interface_svi_feature_t
   ip_mtu_variable                = try(each.value.ip_mtu_variable, null)
   ipv4_address                   = try(each.value.ipv4_address, null)
   ipv4_address_variable          = try(each.value.ipv4_address_variable, null)
-  ipv4_dhcp_helper               = [try(each.value.ipv4_dhcp_helper, null)]
-  ipv4_dhcp_helper_variable      = try(each.value.ipv4_dhcp_helper_variable, null)
+  ipv4_dhcp_helper               = try(each.value.ipv4_dhcp_helpers, null)
+  ipv4_dhcp_helper_variable      = try(each.value.ipv4_dhcp_helpers_variable, null)
   ipv6_address                   = try(each.value.ipv6_address, null)
   ipv6_address_variable          = try(each.value.ipv6_address_variable, null)
   mtu                            = try(each.value.mtu, null)
@@ -126,14 +126,10 @@ resource "sdwan_vpn_interface_svi_feature_template" "vpn_interface_svi_feature_t
       direction         = "out"
     }],
   ])
-  ipv4_secondary_addresses = concat(
-    [for a in try(each.value.ipv4_secondary_addresses, []) : {
-      ipv4_address = a
-    }],
-    [for b in try(each.value.ipv4_secondary_address_variables, []) : {
-      ipv4_address_variable = b
+  ipv4_secondary_addresses = [for a in try(each.value.ipv4_secondary_addresses, []) : {
+      ipv4_address = try(a.address, null)
+      ipv4_address_variable = try(a.address_variable, null)
     }]
-  )
   ipv6_secondary_addresses = concat(
     [for a in try(each.value.ipv6_secondary_addresses, []) : {
       ipv6_address = a
